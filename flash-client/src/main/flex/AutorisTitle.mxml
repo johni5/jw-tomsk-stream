@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?> <!-- http://blog.flexexamples.com/2008/08/16/creating-an-undraggable-titlewindow-container-in-flex/ -->
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" title="Свободный Вход"
+                creationComplete="init_autoris()" width="300" height="224" backgroundColor="#FAC4C4"
+                backgroundAlpha="1.0" borderColor="#FAC4C4">
+    <mx:Script> <![CDATA[
+        import mx.core.Application;
+        import mx.controls.Alert;
+
+        public function init_autoris():void {
+            if (Application.application.user_avtoriz == "true") {
+            } else {
+            }
+        }
+
+        public function valid_nic():void {
+            // "+chr(0x7F)+"-"+chr(0xff)+"
+            var reg_exp:RegExp = new RegExp("[a-zA-Zа-яА-Я]{3,10}", "ig");
+            if (reg_exp.test(NicName.text as String)) Application.application.createConnect();
+            else Alert.show("В Нике Допустимы Только буквы от 3 до 10");
+        }
+        ]]> </mx:Script>
+    <mx:TextInput x="60" y="42" id="NicName"/>
+    <mx:RadioButton change="Application.application.sex_change(event);" name="boy" x="46" y="122" label="Мужчина"
+                    selected="true"/>
+    <mx:RadioButton change="Application.application.sex_change(event);" name="girl" x="164" y="122" label="Женщина"/>
+    <mx:Label x="60" y="19" text="Введите Ваш Ник:" width="160"/>
+    <mx:Image x="10" y="114" source="img/boy2.png"/>
+    <mx:Image x="244" y="114" source="img/girl2.png"/>
+    <mx:ControlBar>
+        <mx:Button label="Подключиться" id="sendConnect" click="valid_nic();"/>
+    </mx:ControlBar>
+</mx:TitleWindow>

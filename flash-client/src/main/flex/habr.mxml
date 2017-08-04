@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+                creationComplete="configxml.send()" layout="absolute"
+                width="1000" height="600"
+                cornerRadius="20"
+                borderColor="#66AFE2"
+                backgroundColor="#EFEFEF">
+    <mx:Style> .useronlinebox {
+        backgroundColor: #dddddd;
+        border-top-left-radius: 10;
+    } </mx:Style>
+    <mx:Script> <![CDATA[
+        import mx.core.UIComponent;
+        import mx.containers.Canvas;
+        import mx.controls.Alert;
+        import mx.rpc.events.ResultEvent;
+        import mx.rpc.events.FaultEvent;
+        import mx.utils.ObjectUtil;
+        import mx.controls.Label;
+        import mx.controls.Image;
+        import mx.utils.ArrayUtil;
+        import mx.rpc.xml.SimpleXMLDecoder;
+        import mx.events.ValidationResultEvent;
+        import mx.events.CloseEvent;
+        import mx.containers.TitleWindow;
+        import mx.managers.PopUpManager;
+        import mx.utils.URLUtil;
+        import mx.core.IFlexDisplayObject;
+        import mx.collections.ArrayCollection;
+        import mx.controls.RadioButton;
+        import mx.controls.Menu;
+        import mx.events.MenuEvent;
+
+        import blz.red5demo.ChatHistoryItem;
+        import blz.red5demo.User;
+
+        //import blz.red5demo.RemoteNetConnection;
+
+        public var camera:Camera;
+        public var microphone:Microphone;
+        public var stream:NetStream;
+        public var server_script:String;
+        public var server_media:String;
+        public var max_count_video:int = 1;
+        public var user_avtoriz:String;
+        public var nc:NetConnection;
+        public var chatIsReady:Boolean = false;
+        public var chatName:String = "0-0-0";
+        public var chatSex:String = "boy";
+        public var chatAvatar:String;
+        public var chatIdred5:String;
+        public var chatCam:String = "";
+        public var localHistory:ArrayCollection = new ArrayCollection();
+        public var UserList:ArrayCollection = new ArrayCollection();
+        public var chat:SharedObject;
+        private var AutorizFreeWin:AutorisTitle;
+        private var PrivatFreeWin:PrivatMessege;
+        private var PrivatNewMess:newmess;
+        public var titleWindow:TitleWindow;
+        public var maxcount_video:int = 1;
+        public var online_count_video:int = 0;
+        public var camera_dostup:Boolean = false;
+        public var path_src:String;
+        public var point1:Point = new Point();
+        public var myMenu:Menu;
+        public var myMenuId:String;
+        public var myMenuName:String;
+
+        public function initApp():void {
+//            Alert.show("configxml.lastResult = " + ObjectUtil.toString(configxml.lastResult));
+            server_media = configxml.lastResult.rtmp_server;
+            //configxml.lastResult.rtmp_server; "rtmp://127.0.0.1:1935/video2/public"
+            maxcount_video = configxml.lastResult.max_col_video;
+            user_avtoriz = configxml.lastResult.user_avtoriz;
+            path_src = "";
+            AutorizFreeWin = PopUpManager.createPopUp(this, AutorisTitle, true) as AutorisTitle;
+            PopUpManager.centerPopUp(AutorizFreeWin);
+        }
+
+        public function sex_change(evt:Event):void {
+            var radio:RadioButton = RadioButton(evt.currentTarget);
+            chatSex = radio.name;
+        }
+
+        public function createConnect():void {
+            //Alert.show("server_media"+AutorizFreeWin.NicName.text);
+            chatName = AutorizFreeWin.NicName.text;
+            AutorizFreeWin.sendConnect.visible = false;
+            chatAvatar = path_src + "img/" + chatSex + ".png";
+            nc = new NetConnection();
+            nc.objectEncoding = ObjectEncoding.AMF3;
+            nc.addEventListener(NetStatusEvent.NET_STATUS, netStatuscreateConnect);
+            nc.connect(server_media, chatName, path_src + "img/" + chatSex + "2.png", chatCam);
+            nc.client = this;
+        }
+
+        private function netStatuscreateConnect(event:NetStatusEvent):void {
+            if (event.info.code == "NetConnection.Connect.Rejected") {
+                Alert.show("Ошибка !(Rejected) -" + event.info.application);
+                AutorizFreeWin.sendConnect.visible = true;
+            }
+            if (event.info.code == "NetConnection.Connect.Failed") {
+                Alert.show("ОШИБКА Нет соединения с медиа сервером");
+                AutorizFreeWin.sendConnect.visible = true;
+            }
+            if (event.info.code == "NetConnection.Connect.Success") {
+                //Alert.show("Соединились с медиа сервером");
+                PopUpManager.removePopUp(AutorizFreeWin);
+                chat = SharedObject.getRemote("chat", nc.uri);
+                chat.addEventListener(SyncEvent.SYNC, onSync);
+                chat.connect(nc);
+                GetUserList();
+                GetUseridred5();
+                bcam.addEventListener(MouseEvent.CLICK, InitCamera);
+            }
+        }
+
+        private function netStatus(event:NetStatusEvent):void {
+            if (event.info.code == "NetConnection.Connect.Rejected") {
+                Alert.show("Ошибка !(Rejected) -" + event.info.application);
+            }
+            if (event.info.code == "NetConnection.Connect.Failed") {
+                Alert.show("ОШИБКА Нет соединения с медиа сервером");
+            }
+            if (event.info.code == "NetConnection.Connect.Success") {
+
+            }
+        }
+
+        private function onSync(event:SyncEvent):void {
+            if (chatIsReady == false) {
+                chatIsReady = true;
+                nc.call("chatLogin", null, chatName, "0xbb0f00", chatAvatar);
+            }
+            localHistory.addItem(chat.data.remoteHistory[0]);
+            setTimeout(function ():void {
+                chatmessege.validateNow();
+                chatmessege.verticalScrollPosition = chatmessege.maxVerticalScrollPosition;
+            }, 100);
+            // chatmessege.validateNow();
+            // chatmessege.verticalScrollPosition = chatmessege.maxVerticalScrollPosition;
+        }
+
+        private function makesendmessege(event:Event):void {
+            var result:ValidationResultEvent = stringValidator.validate();
+            switch (result.type) {
+                case ValidationResultEvent.INVALID:
+                    Alert.show(result.message, result.type);
+                    break;
+                case ValidationResultEvent.VALID:
+                    newtextmessege.visible = false;
+                    labelsend.visible = true;
+                    var textColor:String = "0x" + youcolor.selectedColor.toString(16);
+                    if (!chatIsReady) {
+                        Alert.show("Сначала нужно подключиться к серверу");
+                    } else {
+                        newtextmessege.visible = false;
+                        labelsend.visible = true;
+                        nc.call("chatMessage", null, chatName, textmessege.text, textColor, chatAvatar);
+                        setTimeout(function ():void {
+                            newtextmessege.visible = true;
+                            labelsend.visible = false;
+                            textmessege.text = "";
+                        }, 10000);
+                    }
+                    break;
+            }
+        }
+
+        private function httpService_fault(evt:FaultEvent):void {
+            var title:String = evt.type + " (" + evt.fault.faultCode + ")";
+            var text:String = evt.fault.faultString;
+        }
+
+        private function GetUseridred5():void {
+            var r:Responder = new Responder(function (id:String):void {
+                chatIdred5 = id;
+            }, netStatus);
+            nc.call("getUserId", r);
+        }
+
+        private function GetUserList():void {
+            var r:Responder = new Responder(onGetUserList, netStatus);
+            nc.call("getUserList", r);
+        }
+
+        private function onGetUserList(r:Object):void {
+            //Alert.show("UserLeaveRoom= " + ObjectUtil.toString(r));
+            var qwee:String;
+            for (var bnn:String in r) {
+                if (r[bnn].cam == "on") {
+                    qwee = path_src + "img/mmm.png";
+                } else qwee = null;
+                UserList.addItem({
+                    id: r[bnn].id,
+                    nikname: r[bnn].nikname,
+                    sex: r[bnn].sex,
+                    isWatching: r[bnn].isWatching,
+                    cam: qwee
+                });
+            }
+        }
+
+        public function UserLeaveRoom(r:Object):void {
+            for (var i:int = 0; i < UserList.source.length; i++) {
+                if (UserList.source[i].id == r.id) {
+                    UserList.removeItemAt(i);
+                    //Alert.show("UserLeaveRoom= " + ObjectUtil.toString(UserList.source));
+                    //break;
+                }
+            }
+        }
+
+        public function UserJoinRoom(r:Object):void {
+            UserList.addItem(r);
+        }
+
+        public function onchange_webcam(r:Object):void {
+            //Alert.show("onchange_webcam= " + ObjectUtil.toString(UserList));
+            for (var i:int = 0; i < UserList.source.length; i++) {
+                if (UserList.source[i].id == r.id) {
+                    if (r.status == "on") {
+                        UserList.source[i].cam = path_src + "img/mmm.png";
+                    } else {
+                        UserList.source[i].cam = null
+                    }
+                    UserList.refresh();
+                }
+            }
+        }
+
+        public function onwatch(r:Object):void {
+            //Alert.show("onwatch= " + ObjectUtil.toString(r));
+            for (var i:int = 0; i < UserList.source.length; i++) {
+                if (UserList.source[i].id == r) {
+                    UserList.source[i].isWatching = path_src + "img/yee.png";
+                    UserList.refresh();
+                }
+            }
+        }
+
+        public function offwatch(r:Object):void {
+            for (var i:int = 0; i < UserList.source.length; i++) {
+                if (UserList.source[i].id == r) {
+                    UserList.source[i].isWatching = null;
+                    UserList.refresh();
+                }
+            }
+        }
+
+        private function InitCamera(event:Event):void {
+            camera = Camera.getCamera();
+            microphone = Microphone.getMicrophone();
+            microphone.gain = SoundSlide.value;
+            //microphone.setLoopBack(true);
+            microphone.addEventListener(ActivityEvent.ACTIVITY, activity);
+            camera.addEventListener(StatusEvent.STATUS, CameraStatus);
+            if (camera != null) {
+                var widthcam:int = 320;
+                var heightcam:int = 240;
+                camera.setMode(widthcam, heightcam, 25);
+                camera.setQuality(0, 100);
+                vd.attachCamera(camera);
+                if (camera_dostup == true) sendCamera();
+            } else Alert.show("WEB камер не обнаружено !!!");
+        }
+
+        private function CameraStatus(evt:StatusEvent):void {
+            if (evt.code == "Camera.Unmuted") {
+                sendCamera();
+                camera_dostup = true;
+            }
+        }
+
+        private function sendCamera():void {
+            bcam.label = "Выключить";
+            bcam.removeEventListener(MouseEvent.CLICK, InitCamera);
+            bcam.addEventListener(MouseEvent.CLICK, StopCamera);
+            createStream();
+            nc.call("change_webcam", null, "on");
+        }
+
+        private function activity(event:ActivityEvent):void {
+            addEventListener(Event.ENTER_FRAME, showMicLevel);
+        }
+
+        private function showMicLevel(event:Event):void {
+            level.graphics.clear();
+            level.graphics.beginFill(0x555555, 1);
+            level.graphics.drawRect(0, 0, (microphone.activityLevel * 2), 2);
+            level.graphics.endFill();
+        }
+
+        private function StopCamera(event:Event):void {
+            bcam.label = "Включить Видео";
+            vd.attachCamera(null);
+            camera = null;
+            microphone = null;
+            stream = null;
+            nc.call("change_webcam", null, "off");
+            bcam.removeEventListener(MouseEvent.CLICK, StopCamera);
+            bcam.addEventListener(MouseEvent.CLICK, InitCamera);
+        }
+
+        private function createStream():void {
+            //Alert.show("cam"+ ObjectUtil.toString(httpService.lastResult));
+            stream = new NetStream(nc);
+            stream.addEventListener(NetStatusEvent.NET_STATUS, netStatus);
+            stream.attachCamera(camera);
+            stream.attachAudio(microphone);
+            stream.publish(chatIdred5, "live");
+        }
+
+        public function InitVideo(evt:Event):void {
+            //Alert.show("online_count_video"+ ObjectUtil.toString(online_count_video));
+            if (online_count_video < maxcount_video) {
+                titleWindow = new TitleWindow();
+                titleWindow.name = evt.currentTarget.name;
+                titleWindow.title = evt.currentTarget.styleName;
+                titleWindow.showCloseButton = true;
+                titleWindow.width = 348;
+                titleWindow.height = 288;
+                titleWindow.addEventListener(CloseEvent.CLOSE, titleWindow_close);
+                var INstream:NetStream = new NetStream(nc);
+                INstream.addEventListener(NetStatusEvent.NET_STATUS, netStatus);
+                var video:Video = new Video(320, 240);
+                var uiComp:UIComponent = new UIComponent();
+                uiComp.addChild(video);
+                uiComp.width = 320;
+                uiComp.height = 240;
+                INstream.play(evt.currentTarget.name, -1);
+                video.attachNetStream(INstream);
+                video.smoothing = true;
+                video.width = 320;
+                video.height = 240;
+                titleWindow.addChild(uiComp);
+                PopUpManager.addPopUp(titleWindow, this, false);
+                online_count_video++;
+                PopUpManager.centerPopUp(titleWindow);
+                nc.call("watch", null, evt.currentTarget.name);
+                //Alert.show("getChildByName"+ ObjectUtil.toString(CanPoisk.title));
+            } else Alert.show("Максимальное количество трансляций : " + ObjectUtil.toString(maxcount_video));
+        }
+
+        public function titleWindow_close(evt:CloseEvent):void {
+            PopUpManager.removePopUp(evt.target as IFlexDisplayObject);
+            online_count_video--;
+            nc.call("offwatch", null, evt.currentTarget.name);
+        }
+
+        public function showMenu(evt:MouseEvent):void {
+            myMenu = Menu.createMenu(null, myMenuData, false);
+            myMenu.labelField = "@label";
+            myMenu.addEventListener(MenuEvent.ITEM_CLICK, menuHandler);
+            myMenuId = evt.currentTarget.name;
+            myMenuName = evt.currentTarget.text;
+            // Calculate position of Menu in Application's coordinates. evt.currentTarget.name
+            point1.x = evt.target.x;
+            point1.y = evt.target.y;
+            point1 = evt.target.localToGlobal(point1);
+            myMenu.show(point1.x + 3, point1.y + 5);
+        }
+
+        // sendprivatmessege
+        public function menuHandler(evt:MenuEvent):void {
+            switch (evt.index) {
+                case 0:
+                    PrivatFreeWin = PopUpManager.createPopUp(this, PrivatMessege, true) as PrivatMessege;
+                    //PrivatFreeWin.title= "Личное сообщения для " + myMenuName;
+                    PopUpManager.centerPopUp(PrivatFreeWin);
+                    PrivatFreeWin.pmess.name = myMenuId;
+                    PrivatFreeWin.title = "Личное сообщение для " + myMenuName;
+                    break;
+            }
+        }
+
+        public function sendprivatmessege(mess:String, id:String, fr:String):void {
+            //Alert.show("Сообщение "+ mess+"Id=" +id+"from="+fr);
+            nc.call("privatMessage", null, mess, id, fr);
+            // PopUpManager.removePopUp(PrivatFreeWin);
+        }
+
+        public function takeprivatmessege(r:Object):void {
+            //Alert.show(" Object"+ ObjectUtil.toString(r));
+            PrivatNewMess = PopUpManager.createPopUp(this, newmess, true) as newmess;
+            PrivatNewMess.privatnewmess.text = r.text;
+            PrivatNewMess.prm.text = "От " + r.nik;
+            PrivatNewMess.Privmesscon.name = r.id;
+            PrivatNewMess.Privmesscon.styleName = r.nik;
+            PopUpManager.centerPopUp(PrivatNewMess);
+            //Alert.show("Вам личное сообщение "+ r);
+        }
+        ]]> </mx:Script>
+    <mx:XML id="myMenuData">
+        <xmlRoot>
+            <menuitem label="Отправить Сообщение"/>
+        </xmlRoot>
+    </mx:XML>
+    <mx:Dissolve id="dissolveOut" duration="1000" alphaFrom="1.0" alphaTo="0.0"/>
+    <mx:Dissolve id="dissolveIn" duration="1000" alphaFrom="0.0" alphaTo="1.0"/>
+    <mx:Zoom id="zoomAll" zoomWidthTo="1" zoomHeightTo="1" zoomWidthFrom="1" zoomHeightFrom="0"/>
+    <mx:StringValidator id="stringValidator" source="{textmessege}" property="text" minLength="5" maxLength="200"
+                        tooShortError="Слишком короткое сообщение минимум 5 знака"
+                        requiredFieldError="Неверное сообщение Допустимо минимум 5 максимум 200 знаков"/>
+    <mx:HTTPService id="configxml" resultFormat="e4x" url="client/video-chat-config.xml" fault="httpService_fault(event);" result="initApp();"/>
+    <mx:Panel x="742" y="23" width="234" height="272" layout="absolute" title="Моя WEB Камера" cornerRadius="10"
+              color="#494B4C" alpha="1.0" backgroundColor="#D8D4D4">
+        <mx:VideoDisplay x="0" y="0" width="214" height="164" id="vd"/>
+        <mx:Button id="bcam" x="10" y="171" label="Включить Видео" width="194" height="25"/>
+        <mx:Canvas x="0" y="204" width="214" height="2" id="level"></mx:Canvas>
+        <mx:HSlider x="41" y="214" id="SoundSlide" value="70" height="8" minimum="20" maximum="100" snapInterval="10"
+                    change="microphone.gain=SoundSlide.value;"/>
+        <mx:Label x="7" y="211" text="Звук"/>
+    </mx:Panel>
+    <mx:TextInput restrict="a-z A-Z а-я А-Я 0-9 \. \- ! ? ( )" x="215" y="530" width="519" height="30" id="textmessege"
+                  fontSize="13" fontWeight="bold" />
+    <mx:Button x="581" y="568" click="makesendmessege(event)" label="Отправить" id="newtextmessege" cornerRadius="6"/>
+    <mx:ColorPicker x="230" y="568" width="51" id="youcolor"
+                    change="textmessege.setStyle('color', '0x'+youcolor.selectedColor.toString(16));" fontSize="15"/>
+    <mx:Label x="576" y="572" text="Сообщение отправляется" width="172" id="labelsend" visible="false"/>
+    <mx:Label x="10" y="6" text="В Чате:" width="226" height="19" fontSize="12" fontWeight="bold" color="#556569"/>
+    <mx:Label x="244" y="5" text="Сообщения:" width="98" fontSize="12" fontWeight="bold" color="#5A6163"/>
+    <mx:DataGrid x="0" y="23" width="207" height="537" editable="false" dataProvider="{UserList}" id="useronline"
+                 verticalScrollPolicy="on" alternatingItemColors="0xefefef" borderColor="#FBF9F9"
+                 verticalGridLines="false">
+        <mx:columns>
+            <mx:DataGridColumn dataField="sex" headerText="" width="20">
+                <mx:itemRenderer>
+                    <mx:Component>
+                        <mx:Image source="{data.sex}" scaleContent="true"/>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
+            <mx:DataGridColumn dataField="nikname" headerText="Имя">
+                <mx:itemRenderer>
+                    <mx:Component>
+                        <mx:HBox>
+                            <mx:Script> <![CDATA[
+                                override public function set data(value:Object):void {
+                                    super.data = value;
+                                    nicgd.addEventListener(MouseEvent.CLICK, outerDocument.showMenu);
+                                }
+                                ]]> </mx:Script>
+                            <mx:Label styleName="{data.nikname}" text="{data.nikname}" id="nicgd" name="{data.id}"/>
+                        </mx:HBox>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
+            <mx:DataGridColumn dataField="cam" headerText="" width="25">
+                <mx:itemRenderer>
+                    <mx:Component>
+                        <mx:HBox>
+                            <mx:Script> <![CDATA[
+                                override public function set data(value:Object):void {
+                                    super.data = value;
+                                    if (data.cam != null) {
+                                        imgcam.addEventListener(MouseEvent.CLICK, outerDocument.InitVideo);
+                                    }
+                                }
+                                ]]> </mx:Script>
+                            <mx:Image styleName="{data.nikname}" source="{data.cam}" id="imgcam" name="{data.id}"
+                                      width="20" height="20" scaleContent="true"/>
+                        </mx:HBox>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
+            <mx:DataGridColumn dataField="isWatching" headerText="" width="25">
+                <mx:itemRenderer>
+                    <mx:Component>
+                        <mx:HBox>
+                            <mx:Script> <![CDATA[
+                                override public function set data(value:Object):void {
+                                    super.data = value;
+                                    if (data.isWatching == "false") {
+                                        isWatching.source = null;
+                                        isWatching.toolTip = null;
+                                    } else {
+                                        isWatching.source = data.isWatching;
+                                        isWatching.toolTip = "Смотрит Вашу трансляцию";
+                                    }
+                                }
+                                ]]> </mx:Script>
+                            <mx:Image id="isWatching" width="20" height="20" scaleContent="true"/>
+                        </mx:HBox>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
+        </mx:columns>
+    </mx:DataGrid>
+    <mx:List x="215" y="23" id="chatmessege" width="519" height="499" variableRowHeight="true"
+             dataProvider="{localHistory}">
+        <mx:itemRenderer>
+            <mx:Component>
+                <mx:Canvas width="100%" minHeight="50" verticalScrollPolicy="off">
+                    <mx:Script> <![CDATA[
+                        override public function set data(value:Object):void {
+                            super.data = value;
+                            this.validateNow();
+                        }
+                        ]]> </mx:Script>
+                    <mx:Image source="{data.chatAvatar}" scaleContent="true" x="0" y="0"/>
+                    <mx:Label text="{data.user}" width="123" x="55" y="0" fontSize="12" fontWeight="bold"
+                              color="#A23D46"/>
+                    <mx:Text id="newTextArea" text="{data.message}" width="100%" x="55" y="20" color="{data.textColor}"
+                             fontSize="12" enabled="false"/>
+                    <mx:Label x="266" y="2" text="{data.date}" width="134" fontSize="9" color="#C7CACB"/>
+                </mx:Canvas>
+            </mx:Component>
+        </mx:itemRenderer>
+    </mx:List>
+    <mx:Label x="305" y="568" text="Всего 200 осталось:" width="120"/>
+    <mx:Label x="422" y="568" text="{200 - textmessege.text.length}"/>
+    <mx:Text x="759" y="323"
+             text="Для отправки личных сообщений и использования других персональных функций - кликните на желаемый Ник в списке On Line (В Чате)."
+             width="196" height="249"/>
+</mx:Application>

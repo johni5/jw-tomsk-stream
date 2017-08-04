@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.del.jws</groupId>
+    <artifactId>jw-tomsk-stream</artifactId>
+    <packaging>pom</packaging>
+    <version>${global.version}</version>
+    <name>JW Tomsk Stream</name>
+
+    <properties>
+        <context.name>jws1</context.name>
+        <global.version>0.1-alpha</global.version>
+        <client.target>../flash</client.target>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>Maven.ServeBox.org</id>
+            <name>ServeBox.org repository</name>
+            <url>http://maven.servebox.org/repository</url>
+        </repository>
+
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Maven Repository Group</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>Maven.ServeBox.org</id>
+            <name>ServeBox.org repository</name>
+            <url>http://maven.servebox.org/repository</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <modules>
+        <module>flash-client</module>
+        <module>web-client</module>
+        <module>chat</module>
+    </modules>
+
+</project>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- http://blog.flexexamples.com/2008/08/16/creating-an-undraggable-titlewindow-container-in-flex/ -->
+
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+                layout="absolute" title="" showCloseButton="true"
+                close="removeMe();" width="300" creationComplete="pmess.addEventListener(MouseEvent.CLICK, valid_nic);"
+                height="244" backgroundColor="#FAC4C4"
+                backgroundAlpha="1.0" borderColor="#FAC4C4">
+    <mx:Script> <![CDATA[
+        import mx.core.Application;
+        import mx.controls.Alert;
+        import mx.managers.PopUpManager;
+
+        private function removeMe():void {
+            PopUpManager.removePopUp(this);
+        }
+
+        public function valid_nic(evt:MouseEvent):void {
+            // "+chr(0x7F)+"-"+chr(0xff)+"
+            var reg_exp:RegExp = new RegExp("[a-zA-Zа-яА-Я]{3,100}", "ig");
+            if (reg_exp.test(privatm.text as String)) {
+                Application.application.sendprivatmessege(privatm.text, evt.currentTarget.name, Application.application.chatName);
+                removeMe();
+            } else Alert.show(" Допустимы Только буквы от 3 до 100");
+        }
+        ]]> </mx:Script>
+    <mx:Label x="10" y="19" id="prm" text="Текст Сообщения:" width="160"/>
+    <mx:TextArea x="10" y="45" id="privatm" width="260" height="113"/>
+    <mx:ControlBar>
+        <mx:Button name="" label="Отправить" id="pmess"/>
+    </mx:ControlBar>
+</mx:TitleWindow>

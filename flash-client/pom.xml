@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>jw-tomsk-stream</artifactId>
+        <groupId>org.del.jws</groupId>
+        <version>${global.version}</version>
+        <relativePath>..</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>flash-client</artifactId>
+    <packaging>swf</packaging>
+    <name>Flash Client</name>
+
+    <properties>
+        <flex.sdk.version>3.2.0.3958</flex.sdk.version>
+    </properties>
+
+    <build>
+        <sourceDirectory>src/main/flex</sourceDirectory>
+        <directory>${client.target}</directory>
+        <plugins>
+            <plugin>
+                <groupId>org.servebox.flex</groupId>
+                <artifactId>flex-plugin</artifactId>
+                <version>2.3.2</version>
+                <extensions>true</extensions>
+                <inherited>true</inherited>
+                <configuration>
+                    <locale>en_US</locale>
+                    <mxmlFile>src/main/flex/habr.mxml</mxmlFile>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.5</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${client.target}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.adobe.flexunit</groupId>
+            <artifactId>flexunit</artifactId>
+            <version>0.9</version>
+            <scope>test</scope>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>com.adobe.flash.core</groupId>
+            <artifactId>playerglobal</artifactId>
+            <version>2.0</version>
+            <scope>provided</scope>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>com.adobe.flex.sdkcore</groupId>
+            <artifactId>framework</artifactId>
+            <version>${flex.sdk.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>com.adobe.flex.sdkcore</groupId>
+            <artifactId>flex</artifactId>
+            <version>${flex.sdk.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>com.adobe.flex.sdkcore</groupId>
+            <artifactId>rpc</artifactId>
+            <version>${flex.sdk.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>com.adobe.flex.sdkcore</groupId>
+            <artifactId>utilities</artifactId>
+            <version>${flex.sdk.version}</version>
+            <type>swc</type>
+        </dependency>
+        <!-- LOCALE -->
+        <dependency>
+            <groupId>com.adobe.flex.locales.en_US</groupId>
+            <artifactId>framework_rb</artifactId>
+            <version>${flex.sdk.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>com.adobe.flex.locales.en_US</groupId>
+            <artifactId>rpc_rb</artifactId>
+            <version>${flex.sdk.version}</version>
+            <type>swc</type>
+        </dependency>
+
+    </dependencies>
+
+
+</project>

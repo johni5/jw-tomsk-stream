@@ -1,0 +1,51 @@
+﻿<?xml version="1.0"?>
+<mx:Application
+        xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+        initialize="initData()">
+
+    <mx:Script><![CDATA[
+        import mx.collections.ArrayList;
+        import mx.controls.ComboBox;
+        import mx.events.ListEvent;
+
+        private var nc:NetConnection;
+
+        private function doConnect(event:MouseEvent):void {
+            var context:String = application.parent.loaderInfo.parameters['contextName'];
+            var host:String = application.parent.loaderInfo.parameters['host'];
+            var user:String = application.parent.loaderInfo.parameters['login'];
+            var pas:String = application.parent.loaderInfo.parameters['pas'];
+            log.text += 'Connecting to ' + context + '\n';
+            nc = new NetConnection();
+            nc.objectEncoding = ObjectEncoding.AMF0;
+            nc.addEventListener(NetStatusEvent.NET_STATUS, netStatus);
+            nc.connect('rtmp://' + host + '/' + context, user, pas);
+        }
+
+        private function netStatus(event:NetStatusEvent):void {
+            log.text += event.info.code + "\n";
+        }
+
+        public function micChange(e:ListEvent):void {
+            printLog("Selected item: " + e.columnIndex)
+        }
+
+        private function initData():void {
+            var micSelector:ComboBox = new ComboBox();
+            micSelector.dataProvider = new ArrayList(Microphone.names);
+            addChild(micSelector);
+            var vb:VBox = new VBox();
+            printLog("Initialization complete")
+        }
+
+        private function printLog(s:String):void {
+            log.text += s + "\n";
+        }
+        ]]></mx:Script>
+
+    <mx:VBox id="box" paddingTop="10" paddingLeft="10">
+        <mx:Button click="doConnect(event)" label="connect to Red5"/>
+        <mx:TextArea id="log" width="400" height="400" editable="false"/>
+    </mx:VBox>
+
+</mx:Application>

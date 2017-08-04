@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?> <!-- http://blog.flexexamples.com/2008/08/16/creating-an-undraggable-titlewindow-container-in-flex/ -->
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" title="Личное сообщения "
+                showCloseButton="true" close="removeMe();" width="300"
+                creationComplete="Privmesscon.addEventListener(MouseEvent.CLICK, creat_mess);" height="244"
+                backgroundColor="#66A5D1" backgroundAlpha="1.0" borderColor="#196A76">
+    <mx:Script> <![CDATA[
+        import mx.core.Application;
+        import mx.controls.Alert;
+        import mx.managers.PopUpManager;
+
+        private var PrivatFreeWin:PrivatMessege;
+
+        private function removeMe():void {
+            PopUpManager.removePopUp(this);
+        }
+
+        public function creat_mess(evt:MouseEvent):void {
+            // "+chr(0x7F)+"-"+chr(0xff)+"
+            PrivatFreeWin = PopUpManager.createPopUp(this, PrivatMessege, true) as PrivatMessege;
+            //PrivatFreeWin.title= "Личное сообщения для " + myMenuName;
+            PopUpManager.centerPopUp(PrivatFreeWin);
+            PrivatFreeWin.pmess.name = evt.currentTarget.name;
+            PrivatFreeWin.title = "Личное сообщение для " + evt.currentTarget.styleName;
+            removeMe();
+        }
+        ]]> </mx:Script>
+    <mx:Label x="10" y="19" id="prm" text="vvv" width="160"/>
+    <mx:TextArea x="10" y="45" id="privatnewmess" width="260" height="113"/>
+    <mx:ControlBar>
+        <mx:Button name="" styleName="" label="Ответить" id="Privmesscon"/>
+    </mx:ControlBar>
+</mx:TitleWindow>

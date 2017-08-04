@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans  xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+        xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:mvc="http://www.springframework.org/schema/mvc"
+        xmlns:util="http://www.springframework.org/schema/util"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans
+							http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+							http://www.springframework.org/schema/context
+							http://www.springframework.org/schema/context/spring-context-3.0.xsd
+							http://www.springframework.org/schema/tx
+							http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+							http://www.springframework.org/schema/mvc
+							http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+							http://www.springframework.org/schema/aop
+							http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+							http://www.springframework.org/schema/util
+							http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+    <mvc:annotation-driven />
+
+    <context:annotation-config />
+
+    <context:component-scan base-package="com.del.jws.server" />
+
+    <bean id="placeholderConfig"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="/WEB-INF/red5-web.properties"/>
+    </bean>
+
+    <bean id="web.context" class="org.red5.server.Context" autowire="byType"/>
+
+    <bean id="web.scope" class="org.red5.server.scope.WebScope">
+        <property name="server" ref="red5.server"/>
+        <property name="parent" ref="global.scope"/>
+        <property name="context" ref="web.context"/>
+        <property name="handler" ref="web.handler"/>
+        <property name="contextPath" value="${webapp.contextPath}"/>
+        <property name="virtualHosts" value="${webapp.virtualHosts}"/>
+    </bean>
+
+    <bean id="web.handler" class="com.del.jws.red5.Application"/>
+
+    <bean id="dispatcher" class="org.springframework.web.servlet.DispatcherServlet"/>
+
+</beans>

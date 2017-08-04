@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="WINDOWS-1251" standalone="yes" ?>
+<root>
+    <rtmp_server>rtmp://localhost:1935/habr/public</rtmp_server>
+    <max_col_video>3</max_col_video>
+    <user_avtoriz>false</user_avtoriz>
+</root>

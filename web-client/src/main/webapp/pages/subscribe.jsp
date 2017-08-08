@@ -31,6 +31,9 @@
         fv.host = '${host}';
         fv.nsName = '${nsName}';
         fv.clientType = '${clientType}';
+
+        fv.bufferTime = '2'; // 0-100 step 0.1
+
         swfobject.embedSWF(
                 "<c:url value='/static/flash/JwsReceiver.swf' />",
                 "client",

@@ -39,6 +39,12 @@
         fv.host = '${host}';
         fv.nsName = '${nsName}';
         fv.clientType = '${clientType}';
+
+        fv.gain = '50'; // 0-100
+        fv.rate = '22'; // 8-44 KHz
+        fv.level = '10'; // 0-100 Silence
+        fv.timeout = '2000'; // 0-10000 ms
+
         swfobject.embedSWF(
                 "<c:url value='/static/flash/JwsSender.swf' />",
                 "client",
